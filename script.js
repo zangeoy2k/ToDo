@@ -29,10 +29,23 @@ function iniciaToDo () {
     // Associa função "adicionarTarerfaEnter()" ao evento de pressionar a tecla "enter"
     // no campo de "Adicionar nova tarefa"
     txt_nova_tarefa.addEventListener("keypress", adicionarTarefaEnter)
+
+    // Carrega as tarefas salvas no cookie do navegador Web  ao carregar a página
+    const arrayTarefas = obterTarefasDoNavegador();
+    salvarCookieTarefas([]);
+    arrayTarefas.forEach(strTarefa => {
+        adicionarTarefa(strTarefa);
+        
+    });
+
 }
 
-function adicionarTarefa() {
-    if (txt_nova_tarefa.value.trim() !=="") {
+function adicionarTarefa(strTarefa) {
+    if (typeof strTarefa !== 'string' || strTarefa == null) {
+        strTarefa = txt_nova_tarefa.value;
+    }
+
+    if (strTarefa.trim() !=="") {
         const btn_item = `
         <div>
             <button class="btn btn-success btn sm me-2 btn-concluir" onclick="concluirTarefa(this)">Concluir</button>
@@ -47,7 +60,10 @@ function adicionarTarefa() {
         //"span" permite aplicar formatações em linha
         // "w-75" limita o nome da tarefa a 75% do tamanho da linha, deixando 25% do tamanho restante reservado para os botões
         //"text-truncate" corta e adiciona reticencias (tres pontos ...) em nomes de tarefas que excedem 75% da largura da linha
-        item.innerHTML = "<span class 'w-75 text-truncate'>" + txt_nova_tarefa.value + "</span>" + btn_item;
+        item.innerHTML = "<span class 'w-75 text-truncate'>" + strTarefa + "</span>" + btn_item;
+        
+        // Adicionar a tarefa aos cookies do navegador
+        adicionarTarefaAosCookies(strTarefa);
         
         // Adiciona o item a lista de tarefas
         lista_tarefas.append(item);
@@ -83,6 +99,9 @@ function concluirTarefa(btn_concluir) {
 
 function excluirTarefa() {
     // Remove o item da lista de tarefas
+    const arrayTarefas = obterTarefasDoNavegador(); //Carrega as tarefas para um vetor a partir do cookie do navegador web
+    arrayTarefas.splice(id_tarefa_excluir, 1); // Remove 1 tarefa do vetor a partir di ID da tarefa excluida
+    salvarCookieTarefas(arrayTarefas); // Atualiza o cookie do navewgador web após excluir a tarefa
     lista_tarefas.removeChild(lista_tarefas.children[id_tarefa_excluir])
     // Fecha a modal de "Excluir tarefa"
     modalExcluir.hide();
@@ -101,7 +120,48 @@ function obterIDTarefaExcluir(btn) {
 }
 
 //------------------------------------------------------------------
-// 3. ESCUTADORES DE EVENTOS E INÍCIO
+// 3. COOKIE
+// Adiciona funcionalidade de cookies (persistência) dos itens adicionados ao carrinho
+// (mantém os produtos adicionados as tarefas mesmo ao fechar ou atualizar a página)
 //------------------------------------------------------------------
+
+const CHAVE_TAREFAS_TODO = 'tarefas_todo';
+
+function obterTarefasDoNavegador() {
+    // Tenta ler o cookie do navegador
+    try {
+        const cookie = localStorage.getItem(CHAVE_TAREFAS_TODO);
+        if (cookie) {
+            // Se existir, retorna o cookie
+            return JSON.parse(cookie);
+        }
+    } catch (e) {
+        console.error("Falha ao ler o cookie do armazenamento local.")
+    }
+    // Retorna um vetor vaziuo em caso de falha
+    return [];
+}
+
+function salvarCookieTarefas(arrayTarefas) {
+    try {
+        // Salva as tarefas em formato JSON no navegador Web.
+        //Você pode visualizar os itens salvos no navegador Web em:
+        // Botão direito na página > Inspencionar > Application > Storage > Local storage
+        localStorage.setItem(CHAVE_TAREFAS_TODO, JSON.stringify(arrayTarefas));
+    } catch (e) {
+        console.error("ERRO: Falha ao salvar as tarefas no navegador. Erro: ", e);
+    }
+}
+
+function adicionarTarefaAosCookies(strTarefa) {
+    const arrayTarefas = obterTarefasDoNavegador();
+    arrayTarefas.push(strTarefa);
+    salvarCookieTarefas(arrayTarefas);
+    
+}
+
+//-------------------------------------------------------------------
+// 4. ESCUTADORES DE EVENTOS E INÍCIO
+//-------------------------------------------------------------------
 
 iniciaToDo();
