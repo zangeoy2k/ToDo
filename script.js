@@ -38,6 +38,8 @@ function iniciaToDo () {
         
     });
 
+    lista_tarefas.querySelectorAll("li").forEach(li=> makeDraggable(li));
+
 }
 
 function adicionarTarefa(strTarefa) {
@@ -62,6 +64,16 @@ function adicionarTarefa(strTarefa) {
         //"text-truncate" corta e adiciona reticencias (tres pontos ...) em nomes de tarefas que excedem 75% da largura da linha
         item.innerHTML = "<span class 'w-75 text-truncate'>" + strTarefa + "</span>" + btn_item;
         
+        //Adicionar suporte a arrastar e soltar a nova tarefa da lista de tarefas
+        makeDraggable(item);
+        item.addEventListener("dragend", () => {
+            let arrayTarefas = []; 
+            Array.from(lista_tarefas.children).forEach(i => {
+                arrayTarefas.push(i.querySelector("span").textContent);
+            });
+            salvarCookieTarefas(arrayTarefas);
+        });
+
         // Adicionar a tarefa aos cookies do navegador
         adicionarTarefaAosCookies(strTarefa);
         
